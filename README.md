@@ -57,11 +57,11 @@ picnicClient.search("Affligem blond").then(searchResults => {
 
 Example of a `POST` request:
 ```js
-await picnicClient.addProductToShoppingCart(11295810, 2);
+await picnicClient.addProductToShoppingCart('11295810', 2);
 
 // or
 
-picnicClient.addProductToShoppingCart(11295810, 2).then(shoppingCart => {
+picnicClient.addProductToShoppingCart('11295810', 2).then(shoppingCart => {
     
 });
 ```

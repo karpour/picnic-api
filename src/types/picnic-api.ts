@@ -211,8 +211,8 @@ export type FailureReason = "PRODUCT_ABSENT" | "PRODUCT_LOW_QUALITY" | "PRODUCT_
 
 export type ArticleDeliveryFailureDecorator = {
     type: "ARTICLE_DELIVERY_FAILURES";
-    failures: { [x: string]: FailureReason[] }
-    prices: { [x: string]: number }
+    failures: { [x: string]: FailureReason[]; };
+    prices: { [x: string]: number; };
     [x: string]: any;
 };
 
@@ -487,9 +487,13 @@ export type DeliverySlot = {
     reserved: boolean;
     minimum_order_value: number;
     icon?: Icon;
-    unavailability_reason: "CLOSED" | string;
     [x: string]: any;
-};
+} & ({
+    is_available: false;
+    unavailability_reason: "CLOSED" | string;
+} | {
+    is_available: true;
+});
 
 export type SelectedSlot = {
     slot_id: string;
@@ -534,7 +538,7 @@ export type Component = StackComponent | ContainerComponent | ImageComponent | R
 export type SlotSelectorMessage = {
     pml_version: string;
     component: Component;
-    images: { icon: string };
+    images: { icon: string; };
     tracking_attributes: TrackingAttributes;
     [x: string]: any;
 };
@@ -563,7 +567,7 @@ export type Order = {
     cancellable: boolean;
     creation_time: string;
     status: DeliveryStatus;
-    decorator_overrides: { [key: string]: Decorator[] };
+    decorator_overrides: { [key: string]: Decorator[]; };
     cancellation_time: string | null;
     [x: string]: any;
 };
@@ -660,7 +664,7 @@ export type ConsentSettingText = {
     dissent_text: string;
     timestamp: string;
     [x: string]: any;
-}
+};
 
 export type ConsentSetting = {
     type: string;
@@ -671,19 +675,19 @@ export type ConsentSetting = {
     established_decision: boolean;
     initial_state: boolean;
     [x: string]: any;
-}
+};
 
 export type ConsentDeclaration = {
     consent_request_text_id: string;
     consent_request_locale: string;
     agreement: boolean;
     [x: string]: any;
-}
+};
 
 export type SetConsentSettingsInput = {
     consent_declarations: ConsentDeclaration[];
-}
+};
 
 export type SetConsentSettingsResult = {
     consent_request_text_ids: string[];
-}
+};

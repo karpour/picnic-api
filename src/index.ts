@@ -5,9 +5,38 @@ import hex from "crypto-js/enc-hex";
 
 // @ts-ignore
 import routes from "./static/routes";
-import { AddProductInput, ApiConfig, Category, ConsentSetting, CountryCode, Delivery, DeliveryPosition, DeliveryScenario, DeliveryStatus, GetDeliverySlotsResult, ImageSize, LoginInput, LoginResult, MgmDetails, MyStore, Order, OrderStatus, ProductResult, SearchResult, SetConsentSettingsInput, SetConsentSettingsResult, SetDeliverySlotInput, SingleArticle, SubCategory, SuggestionResult, User } from "./types/picnic-api";
+import {
+    AddProductInput,
+    ApiConfig,
+    Category,
+    ConsentSetting,
+    CountryCode,
+    Delivery,
+    DeliveryPosition,
+    DeliveryScenario,
+    DeliveryStatus,
+    GetDeliverySlotsResult,
+    ImageSize,
+    LoginInput,
+    LoginResult,
+    MgmDetails,
+    MyStore,
+    Order,
+    OrderStatus,
+    ProductResult,
+    SearchResult,
+    SetConsentSettingsInput,
+    SetConsentSettingsResult,
+    SetDeliverySlotInput,
+    SingleArticle,
+    SubCategory,
+    SuggestionResult,
+    User
+} from "./types/picnic-api";
 
-export = class PicnicClient {
+export * from "./types/picnic-api";
+
+export class PicnicClient {
     countryCode: CountryCode;
     apiVersion: string;
     authKey: string | null;
@@ -31,7 +60,7 @@ export = class PicnicClient {
 
         this.httpInstance = axios.create({
             baseURL: this.url
-        })
+        });
     }
 
     /**
@@ -48,8 +77,8 @@ export = class PicnicClient {
                     key: username,
                     secret,
                     client_id: 1
-                })
-                
+                });
+
                 this.authKey = response.headers[`x-picnic-auth`];
 
                 resolve({
@@ -106,7 +135,7 @@ export = class PicnicClient {
     getImage(imageId: string, size: ImageSize): Promise<string> {
         let alternateRoute = this.url.split("/api/")[0];
 
-        return this.sendRequest<any, string>("GET", `${alternateRoute}/static/images/${imageId}/${size}.png`, null, false, true);
+        return this.sendRequest<any, string>("GET", `${alternateRoute}/static/images/${imageId}/${size}.png`, undefined, false, true);
     }
 
     /**
@@ -152,7 +181,7 @@ export = class PicnicClient {
      * @param {number} [count=1] The amount of this product to remove. 
      */
     removeProductFromShoppingCart(productId: string, count: number = 1): Promise<Order> {
-        return this.sendRequest<AddProductInput, Order>("POST", `/cart/remove_product`, { product_id: productId, count } as AddProductInput);
+        return this.sendRequest<AddProductInput, Order>("POST", `/cart/remove_product`, { product_id: productId, count });
     }
 
     /**
@@ -198,7 +227,7 @@ export = class PicnicClient {
      * @param {string} deliveryId The id of the delivery to look up.
      */
     getDeliveryPosition(deliveryId: string): Promise<DeliveryPosition> {
-        return this.sendRequest<any, DeliveryPosition>("GET", `/deliveries/${deliveryId}/position`, null, true);
+        return this.sendRequest<any, DeliveryPosition>("GET", `/deliveries/${deliveryId}/position`, undefined, true);
     }
 
     /**
@@ -206,7 +235,7 @@ export = class PicnicClient {
      * @param {string} deliveryId The id of the delivery to look up.
      */
     getDeliveryScenario(deliveryId: string): Promise<DeliveryScenario> {
-        return this.sendRequest<any, DeliveryScenario>("GET", `/deliveries/${deliveryId}/scenario`, null, true);
+        return this.sendRequest<any, DeliveryScenario>("GET", `/deliveries/${deliveryId}/scenario`, undefined, true);
     }
 
     /**
@@ -307,34 +336,30 @@ export = class PicnicClient {
 
     /**
      * Can be used to send custom requests that are not implemented but do need authentication for it.
+     * @template TRequestData Request data format
+     * @template TResponseData Response data format
      * @param {string} method The HTTP method to use, such as GET, POST, PUT and DELETE.
      * @param {string} path The path, possibly including query params. Example: '/cart/set_delivery_slot' or '/my_store?depth=0'.
-     * @param {Object|Array} [data=null] The request body, usually in case of a POST or PUT request.
+     * @param {TRequestData|Array} [data=undefined] The request body, usually in case of a POST or PUT request.
      * @param {boolean} [includePicnicHeaders=false] If it should include x-picnic-agent and x-picnic-did headers.
      * @param {boolean} [isImageRequest=false] Will add the arrayBuffer response type if true.
      */
-    sendRequest<TRequestData = never, TResponseData = AxiosResponse<TRequestData>>(method: Method, path: string, data: Object | null = null, includePicnicHeaders: boolean = false, isImageRequest: boolean = false): Promise<TResponseData> {
-        return new Promise(async (resolve, reject) => {
-            const options: AxiosRequestConfig<Object> = {
-                method,
-                url: path,
-                headers: {
-                    "User-Agent": "okhttp/3.12.2",
-                    "Content-Type": "application/json; charset=UTF-8",
-                    ...(this.authKey && { "x-picnic-auth": this.authKey }),
-                    ...(includePicnicHeaders && { "x-picnic-agent": "30100;1.15.77-10293", "x-picnic-did": "3C417201548B2E3B" })
-                },
-                ...(data && { data }),
-                ...(isImageRequest && { responseType: "arraybuffer" })
-            };
+    sendRequest<TRequestData = any, TResponseData = any>(method: Method, path: string, data?: TRequestData, includePicnicHeaders: boolean = false, isImageRequest: boolean = false): Promise<TResponseData> {
+        const options: AxiosRequestConfig<TRequestData> = {
+            method,
+            url: path,
+            headers: {
+                "User-Agent": "okhttp/3.12.2",
+                "Content-Type": "application/json; charset=UTF-8",
+                ...(this.authKey && { "x-picnic-auth": this.authKey }),
+                ...(includePicnicHeaders && { "x-picnic-agent": "30100;1.15.77-10293", "x-picnic-did": "3C417201548B2E3B" })
+            },
+            ...{ data },
+            ...(isImageRequest && { responseType: "arraybuffer" })
+        };
 
-            try {
-                const response = await this.httpInstance.request<TRequestData, AxiosResponse<TResponseData>>(options as AxiosRequestConfig<TRequestData>);
-                resolve(response.data);
-            } catch (error) {
-                reject(error);
-            }
-        });
+        return this.httpInstance.request<TResponseData, AxiosResponse<TResponseData, TRequestData>, TRequestData>(options)
+            .then(response => response.data);
     }
 
     /**
@@ -343,4 +368,6 @@ export = class PicnicClient {
     getKnownApiRoutes(): string {
         return routes;
     }
-}
+};
+
+export default PicnicClient;
